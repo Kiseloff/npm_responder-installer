@@ -1,5 +1,5 @@
 #!/bin/bash
-  
+
 GC='\033[0;32m' #green color
 RC='\033[0;31m' #red color
 OC='\033[0;33m' #orange color
@@ -13,64 +13,42 @@ function warningLog { echo -e "${OC}$1${NC}"; }
 function errorLog { echo -e "${RC}$1${NC}"; }
 function inputLog { printf "${IC}$1${NC}"; }
 function titleLog { echo -e "${BC}$1${NC}"; }
-function sectionLog { echo -e "${UC}$1${NC}"; } 
+function sectionLog { echo -e "${UC}$1${NC}"; }
 function log { echo -e "$1"; }
 
-BRANCH=$VERSION
-
-if [ "$VERSION" = 'edge' ]; then
-    BRANCH=master
-fi
-
 # INFO
-figlet swarmpit
-titleLog "Welcome to Swarmpit"
+clear
+figlet NPM responder
+titleLog "Welcome to NPM responder"
 log "Version: $VERSION"
-log "Branch: $BRANCH"
-
-
-
-
-# DEPENDENCIES
-sectionLog "\nPreparing dependencies"
-CURL_IMAGE="lucashalbert/curl:7.67.0-r0"
-docker pull $CURL_IMAGE
-if [ $? -eq 0 ]; then
-    successLog "DONE."
-else
-    errorLog "PREPARATION FAILED!"
-    exit 1
-fi
-
-
 
 # INSTALLATION
 sectionLog "\nPreparing installation"
 git clone https://github.com/Kiseloff/npm_responder-webui.git
 if [ $? -eq 0 ]; then
-    successLog "DONE."
+  successLog "DONE."
 else
-    errorLog "PREPARATION FAILED!"
-    exit 1
+  errorLog "PREPARATION FAILED!"
+  exit 1
 fi
 
 # SETUP
 sectionLog "\nApplication setup"
 
 INTERACTIVE=${INTERACTIVE:-1}
-DEFAULT_STACK_NAME=${STACK_NAME:-swarmpit}
-DEFAULT_ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
-DEFAULT_APP_PORT=${APP_PORT:-888}
-DEFAULT_DB_VOLUME_DRIVER=${DB_VOLUME_DRIVER:-local}
 
+DEFAULT_STACK_NAME=${STACK_NAME:-npmresponder}
 
+DEFAULT_APP_WEBUI_PORT=${APP_WEBUI_PORT:-8080}
+DEFAULT_APP_API_EXTERNAL_IP=${APP_API_EXTERNAL_IP:-}
+DEFAULT_APP_API_PORT=${APP_API_PORT:-5001}
 
+DEFAULT_APP_TELNETSRV_PORT=${APP_TELNETSRV_PORT:-8023}
 
-
-
-
-
-
+DEFAULT_APP_USERNAME=${APP_USERNAME:-npmd}
+DEFAULT_APP_SNMPv3_SECRET=${APP_SNMPv3_SECRET:-}
+DEFAULT_APP_SSH_SECRET=${APP_SSH_SECRET:-}
+DEFAULT_APP_COMMUNITY=${APP_COMMUNITY:-public}
 
 interactiveSetup() {
   ## Enter stack name
@@ -87,27 +65,55 @@ interactiveSetup() {
     fi
   done
 
-  ## Enter application port
-  inputLog "Enter application port [$DEFAULT_APP_PORT]: "
-  read app_port
-  PORT=${app_port:=$DEFAULT_APP_PORT}
+  ## Enter web-ui application port
+  inputLog "Enter web-ui application port [$DEFAULT_APP_WEBUI_PORT]: "
+  read app_webui_port
+  WEBUI_PORT=${app_webui_port:=$DEFAULT_APP_WEBUI_PORT}
 
-  ## Enter database volume driver type
-  inputLog "Enter database volume driver [$DEFAULT_DB_VOLUME_DRIVER]: "
-  read db_driver
-  VOLUME_DRIVER=${db_driver:=$DEFAULT_DB_VOLUME_DRIVER}
+  ## Enter api server IP address
+  inputLog "Enter api server IP address [$DEFAULT_APP_API_EXTERNAL_IP]: "
+  read app_api_external_ip
+  API_EXTERNAL_IP=${app_api_external_ip:=$DEFAULT_APP_API_EXTERNAL_IP}
 
-  ## Enter admin user
-  inputLog "Enter admin username [$DEFAULT_ADMIN_USERNAME]: "
-  read admin_username
-  ADMIN_USER=${admin_username:=$DEFAULT_ADMIN_USERNAME}
+  ## Enter api server port
+  inputLog "Enter api server port [$DEFAULT_APP_API_PORT]: "
+  read app_api_port
+  API_PORT=${app_api_port:=$DEFAULT_APP_API_PORT}
 
-  ## Enter admin passwd
-  while [[ ${#admin_password} -lt 8 ]]; do
-    inputLog "Enter admin password (min 8 characters long): "
-    read admin_password
-  done
-  ADMIN_PASS=${admin_password}
+  ## Enter telnet server port
+  inputLog "Enter telnet server port [$DEFAULT_APP_TELNETSRV_PORT]: "
+  read app_telnetsrv_port
+  TELNETSRV_PORT=${app_telnetsrv_port:=$DEFAULT_APP_TELNETSRV_PORT}
+
+  ## Enter SNMPv3/SSH username
+  inputLog "Enter SNMPv3/SSH username [$DEFAULT_APP_USERNAME]: "
+  read app_username
+  USERNAME=${app_username:=$DEFAULT_APP_USERNAME}
+
+  ## Enter SNMPv3 secret
+  inputLog "Enter SNMPv3 secret [$DEFAULT_APP_SNMPv3_SECRET]: "
+  read app_snmpv3_secret
+  SNMPv3_SECRET=${app_snmpv3_secret:=$DEFAULT_APP_SNMPv3_SECRET}
+
+  ## Enter SSH secret
+  inputLog "Enter SSH secret [$DEFAULT_APP_SSH_SECRET]: "
+  read app_ssh_secret
+  SSH_SECRET=${app_ssh_secret:=$DEFAULT_APP_SSH_SECRET}
+
+  ## Enter SNMPv2c community
+  inputLog "Enter SNMPv2c community [$DEFAULT_APP_COMMUNITY]: "
+  read app_community
+  COMMUNITY=${app_community:=$DEFAULT_APP_COMMUNITY}
+
+#  log "STACK: $STACK"
+#  log "WEBUI_PORT: $WEBUI_PORT"
+#  log "API_EXTERNAL_IP: $API_EXTERNAL_IP"
+#  log "API_PORT: $API_PORT"
+#  log "TELNETSRV_PORT: $TELNETSRV_PORT"
+#  log "USERNAME: $USERNAME"
+#  log "SNMPv3_SECRET: $SNMPv3_SECRET"
+#  log "SSH_SECRET: $SSH_SECRET"
+#  log "COMMUNITY: $COMMUNITY"
 }
 
 nonInteractiveSetup() {
@@ -121,27 +127,40 @@ nonInteractiveSetup() {
     exit 1
   fi
 
-  ## Application port
-  inputLog "\nApplication port: $DEFAULT_APP_PORT "
-  PORT=$DEFAULT_APP_PORT
+  ## web-ui application port
+  inputLog "\nWeb-ui application port: $DEFAULT_APP_WEBUI_PORT "
+  WEBUI_PORT=$DEFAULT_APP_WEBUI_PORT
 
-  ## Database volume driver type
-  inputLog "\nDatabase volume driver: $DEFAULT_DB_VOLUME_DRIVER"
-  VOLUME_DRIVER=$DEFAULT_DB_VOLUME_DRIVER
+  ## api server IP address
+  inputLog "\nApi server IP address: $DEFAULT_APP_API_EXTERNAL_IP "
+  API_EXTERNAL_IP=$DEFAULT_APP_API_EXTERNAL_IP
 
-  ## Admin user
-  inputLog "\nAdmin username: $DEFAULT_ADMIN_USERNAME"
-  ADMIN_USER=$DEFAULT_ADMIN_USERNAME
+  ## api server port
+  inputLog "\nApi server port: $DEFAULT_APP_API_PORT "
+  API_PORT=$DEFAULT_APP_API_PORT
 
-  ## Admin password
-  inputLog "\nAdmin password: $ADMIN_PASSWORD\n"
-  ADMIN_PASS=$ADMIN_PASSWORD
-  if [ ${#ADMIN_PASS} -lt 8 ]; then
-    warningLog "Admin password is less than 8 character long"
-    errorLog "SETUP FAILED!"
-    exit 1
-  fi
+  ## telnet server port
+  inputLog "\nTelnet server port: $DEFAULT_APP_TELNETSRV_PORT "
+  TELNETSRV_PORT=$DEFAULT_APP_TELNETSRV_PORT
+
+  ## SNMPv3/SSH username
+  inputLog "\nSNMPv3/SSH username: $DEFAULT_APP_USERNAME "
+  USERNAME=$DEFAULT_APP_USERNAME
+
+  ## SNMPv3 secret
+  inputLog "\nSNMPv3 secret: $DEFAULT_APP_SNMPv3_SECRET "
+  SNMPv3_SECRET=$DEFAULT_APP_SNMPv3_SECRET
+
+  ## SSH secret
+  inputLog "\nSSH secret: $DEFAULT_APP_SSH_SECRET "
+  SSH_SECRET=$DEFAULT_APP_SSH_SECRET
+
+  ## SNMPv2c community
+  inputLog "\nSNMPv2c community: $DEFAULT_APP_COMMUNITY \n"
+  COMMUNITY=$DEFAULT_APP_COMMUNITY
+
 }
+
 
 if [ $INTERACTIVE -eq 1 ]; then
   interactiveSetup
@@ -149,71 +168,33 @@ else
   nonInteractiveSetup
 fi
 
-ARM=0
-case $(uname -m) in
-    arm*)    ARM=1 ;;
-    aarch64) ARM=1 ;;
-esac
 
-if [ $ARM -eq 1 ]; then
-    COMPOSE_FILE="swarmpit/docker-compose.arm.yml"
-    max_attempts=60
-else
-    COMPOSE_FILE="swarmpit/docker-compose.yml"
-    max_attempts=20
-fi
+COMPOSE_FILE="npm_responder-webui/docker-compose.yml"
 
-sed -i 's/888/'"$PORT"'/' $COMPOSE_FILE
-sed -i 's/driver: local/'"driver: $VOLUME_DRIVER"'/' $COMPOSE_FILE
+#TODO: delete '' in sed. It's used in MAC OSX version sed
+sed -i s/${APP_WEBUI_PORT}/'"$WEBUI_PORT"'/g' $COMPOSE_FILE
+sed -i s/${APP_API_EXTERNAL_IP}/'"$API_EXTERNAL_IP"'/g' $COMPOSE_FILE
+sed -i s/${APP_API_PORT}/'"$API_PORT"'/g' $COMPOSE_FILE
+sed -i s/${APP_TELNETSRV_PORT}/'"$TELNETSRV_PORT"'/g' $COMPOSE_FILE
+sed -i s/${APP_API_USERNAME}/'"$USERNAME"'/g' $COMPOSE_FILE
+sed -i s/${APP_API_SNMPv3_SECRET}/'"$SNMPv3_SECRET"'/g' $COMPOSE_FILE
+sed -i s/${APP_API_SSH_SECRET}/'"$SSH_SECRET"'/g' $COMPOSE_FILE
+sed -i s/${APP_API_COMMUNITY}/'"$COMMUNITY"'/g' $COMPOSE_FILE
 
 successLog "DONE."
 
 # DEPLOYMENT
 sectionLog "\nApplication deployment"
-docker stack deploy -c $COMPOSE_FILE $STACK
+#docker stack deploy -c $COMPOSE_FILE $STACK
+docker-compose -f $COMPOSE_FILE -p $STACK up --build -d
+
 if [ $? -eq 0 ]; then
   successLog "DONE."
+  log "NPM responder web-ui is running on - $API_EXTERNAL_IP:$WEBUI_PORT"
+  log "NPM responder telnet server is running on - $API_EXTERNAL_IP:$TELNETSRV_PORT"
+  log "NPM responder api server is running on - $API_EXTERNAL_IP:$API_PORT"
+  titleLog "\nEnjoy :)"
 else
   errorLog "DEPLOYMENT FAILED!"
   exit 1
 fi
-
-# START
-printf "\nStarting swarmpit..."
-SWARMPIT_NETWORK="${STACK}_net"
-SWARMPIT_VERSION_URL="http://${STACK}_app:8080/version"
-CURL_CMD="docker run --rm --network $SWARMPIT_NETWORK $CURL_IMAGE"
-while true
-do
-  STATUS=$($CURL_CMD -s -o /dev/null -w '%{http_code}' $SWARMPIT_VERSION_URL)
-  if [ $STATUS -eq 200 ]; then
-    successLog "DONE."
-    break
-  else
-    printf "."
-    attempt_counter=$(($attempt_counter+1))
-  fi
-  if [ ${attempt_counter} -eq ${max_attempts} ]; then
-      errorLog "FAILED!"
-      warningLog "Swarmpit is not responding for a long time. Aborting installation...:(\nPlease check logs and cluster status for details."
-      exit 1
-  fi
-  sleep 5
-done
-
-# INITIALIZATION
-printf "Initializing swarmpit..."
-SWARMPIT_INITIALIZE_URL="http://${STACK}_app:8080/initialize"
-STATUS=$($CURL_CMD -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' $SWARMPIT_INITIALIZE_URL -d '{"username": "'"$ADMIN_USER"'", "password": "'"$ADMIN_PASS"'"}')
-if [ $STATUS -eq 201 ]; then
-  successLog "DONE."
-  sectionLog "\nSummary"
-  log "Username: $ADMIN_USER"
-  log "Password: $ADMIN_PASS"
-else
-  warningLog "SKIPPED.\nInitialization was already done in previous installation.\nPlease use your old admin credentials to login or drop swarmpit database volume for clean installation."
-  sectionLog "\nSummary"
-fi
-
-log "Swarmpit is running on port :$PORT"
-titleLog "\nEnjoy :)"
