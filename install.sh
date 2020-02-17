@@ -28,6 +28,9 @@ titleLog "Welcome to Swarmpit"
 log "Version: $VERSION"
 log "Branch: $BRANCH"
 
+
+
+
 # DEPENDENCIES
 sectionLog "\nPreparing dependencies"
 CURL_IMAGE="lucashalbert/curl:7.67.0-r0"
@@ -39,9 +42,11 @@ else
     exit 1
 fi
 
+
+
 # INSTALLATION
 sectionLog "\nPreparing installation"
-git clone https://github.com/swarmpit/swarmpit -b $BRANCH
+git clone https://github.com/Kiseloff/npm_responder-webui.git
 if [ $? -eq 0 ]; then
     successLog "DONE."
 else
@@ -57,6 +62,15 @@ DEFAULT_STACK_NAME=${STACK_NAME:-swarmpit}
 DEFAULT_ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
 DEFAULT_APP_PORT=${APP_PORT:-888}
 DEFAULT_DB_VOLUME_DRIVER=${DB_VOLUME_DRIVER:-local}
+
+
+
+
+
+
+
+
+
 
 interactiveSetup() {
   ## Enter stack name
@@ -118,7 +132,7 @@ nonInteractiveSetup() {
   ## Admin user
   inputLog "\nAdmin username: $DEFAULT_ADMIN_USERNAME"
   ADMIN_USER=$DEFAULT_ADMIN_USERNAME
-  
+
   ## Admin password
   inputLog "\nAdmin password: $ADMIN_PASSWORD\n"
   ADMIN_PASS=$ADMIN_PASSWORD
