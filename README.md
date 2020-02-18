@@ -1,6 +1,6 @@
-# Swarmpit installer
+# NPM responder installer
 
-Swarmpit platform installer
+NPM responder platform installer
 
 ## Run 
 
@@ -11,9 +11,9 @@ Example:
 
 ```{r, engine='bash', count_lines}
 docker run -it --rm \
-  --name swarmpit-installer \
+  --name npm_responder-installer \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  swarmpit/install:edge
+  kiseloff/npm_responder-install:latest
 ```
 
 ### Non-interactive mode
@@ -24,12 +24,19 @@ Example:
 
 ```{r, engine='bash', count_lines}
 docker run -it --rm \
-  --name swarmpit-installer \
+  --name npm_responder-installer \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   -e INTERACTIVE=0 \
-  -e ADMIN_USERNAME=randy \
-  -e ADMIN_PASSWORD=test1234 \
-  swarmpit/install:edge
+  -e STACK_NAME=npmresponder \
+  -e APP_WEBUI_PORT=8080 \
+  -e APP_API_EXTERNAL_IP=<IP ADDRESS> \
+  -e APP_API_PORT=5001 \
+  -e APP_TELNETSRV_PORT=8023 \
+  -e APP_USERNAME=<USERNAME> \
+  -e APP_SNMPv3_SECRET=<SECRET1> \
+  -e APP_SSH_SECRET=<SECRET2> \
+  -e APP_COMMUNITY=public
+  kiseloff/npm_responder-install:latest
 ```
 
 #### Parameters
@@ -37,11 +44,15 @@ docker run -it --rm \
 ##### Mandatory 
 
 - INTERACTIVE - must be set to **0** (disabled)
-- ADMIN_PASSWORD - must be at least 8 characters long
+- APP_API_EXTERNAL_IP - must be IPv4 address (like 10.1.1.1)
+- APP_USERNAME - username for SSH and SNMPv3 connections
+- APP_SNMPv3_SECRET - secret for SNMPv3 connections
+- APP_SSH_SECRET - secret for SSH connections
 
 ##### Optional 
 
-- STACK_NAME - default to **swarmpit**
-- ADMIN_USERNAME - default to **admin**
-- APP_PORT - default to **888**
-- DB_VOLUME_DRIVER - default to **local**
+- STACK_NAME - default to **npmresponder**
+- APP_WEBUI_PORT - default to **8080**
+- APP_API_PORT - default to **5001**
+- APP_TELNETSRV_PORT - default to **8023**
+- APP_COMMUNITY - default to **public**

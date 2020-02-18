@@ -104,16 +104,6 @@ interactiveSetup() {
   inputLog "Enter SNMPv2c community [$DEFAULT_APP_COMMUNITY]: "
   read app_community
   COMMUNITY=${app_community:=$DEFAULT_APP_COMMUNITY}
-
-#  log "STACK: $STACK"
-#  log "WEBUI_PORT: $WEBUI_PORT"
-#  log "API_EXTERNAL_IP: $API_EXTERNAL_IP"
-#  log "API_PORT: $API_PORT"
-#  log "TELNETSRV_PORT: $TELNETSRV_PORT"
-#  log "USERNAME: $USERNAME"
-#  log "SNMPv3_SECRET: $SNMPv3_SECRET"
-#  log "SSH_SECRET: $SSH_SECRET"
-#  log "COMMUNITY: $COMMUNITY"
 }
 
 nonInteractiveSetup() {
@@ -158,7 +148,6 @@ nonInteractiveSetup() {
   ## SNMPv2c community
   inputLog "\nSNMPv2c community: $DEFAULT_APP_COMMUNITY \n"
   COMMUNITY=$DEFAULT_APP_COMMUNITY
-
 }
 
 
@@ -171,15 +160,14 @@ fi
 
 COMPOSE_FILE="npm_responder-webui/docker-compose.yml"
 
-#TODO: delete '' in sed. It's used in MAC OSX version sed
-sed -i s/${APP_WEBUI_PORT}/'"$WEBUI_PORT"'/g' $COMPOSE_FILE
-sed -i s/${APP_API_EXTERNAL_IP}/'"$API_EXTERNAL_IP"'/g' $COMPOSE_FILE
-sed -i s/${APP_API_PORT}/'"$API_PORT"'/g' $COMPOSE_FILE
-sed -i s/${APP_TELNETSRV_PORT}/'"$TELNETSRV_PORT"'/g' $COMPOSE_FILE
-sed -i s/${APP_API_USERNAME}/'"$USERNAME"'/g' $COMPOSE_FILE
-sed -i s/${APP_API_SNMPv3_SECRET}/'"$SNMPv3_SECRET"'/g' $COMPOSE_FILE
-sed -i s/${APP_API_SSH_SECRET}/'"$SSH_SECRET"'/g' $COMPOSE_FILE
-sed -i s/${APP_API_COMMUNITY}/'"$COMMUNITY"'/g' $COMPOSE_FILE
+sed -i 's/${APP_WEBUI_PORT}/'"$WEBUI_PORT"'/g' $COMPOSE_FILE
+sed -i 's/${APP_API_EXTERNAL_IP}/'"$API_EXTERNAL_IP"'/g' $COMPOSE_FILE
+sed -i 's/${APP_API_PORT}/'"$API_PORT"'/g' $COMPOSE_FILE
+sed -i 's/${APP_TELNETSRV_PORT}/'"$TELNETSRV_PORT"'/g' $COMPOSE_FILE
+sed -i 's/${APP_API_USERNAME}/'"$USERNAME"'/g' $COMPOSE_FILE
+sed -i 's/${APP_API_SNMPv3_SECRET}/'"$SNMPv3_SECRET"'/g' $COMPOSE_FILE
+sed -i 's/${APP_API_SSH_SECRET}/'"$SSH_SECRET"'/g' $COMPOSE_FILE
+sed -i 's/${APP_API_COMMUNITY}/'"$COMMUNITY"'/g' $COMPOSE_FILE
 
 successLog "DONE."
 
